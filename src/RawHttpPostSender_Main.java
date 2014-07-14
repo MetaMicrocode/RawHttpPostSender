@@ -25,6 +25,19 @@ import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 import org.apache.http.message.BasicNameValuePair;
 
 public class RawHttpPostSender_Main {
+	public static void printHowToUse(){
+		System.out.println("How To Use");
+		System.out.println("-u : URL , --uport : URL Port");
+		System.out.println("-p : Proxy Address , --pport : Proxy Port");
+		System.out.println("-h : Http Header, --hvalue : Http Value");
+		System.out.println("-output : Output File Name");
+		System.out.println("-status : Print Response Status");
+		System.out.println("-t : [Choose One] form-data(default), param");
+		System.out.println("-d <Not Param> : --dfile : file name or --dvalue : string, --dmime : string , --dpname : string  , --dnname : string");
+		System.out.println("-d <Not Param> : --dpname : string , --dvalue : string");
+		System.out.println("Excample");
+		System.out.println("-u http://192.168.0.6/upload.php -h User-Agent --hvalue \"Mozilla/5.0 (Windows NT 6.1; WOW64; rv:30.0) Gecko/20100101 Firefox/30.0\" -d --dpname \"userfile\" --dfile \"C:/data/data1.txt\" --dnname \"test42342.txt\" --dmime \"text/plane\" -t form-data -p 192.168.0.10 --pport 8080 -status -output c:/data/res.txt");
+	}
 	public static void main(String[] args) throws ClientProtocolException, IOException {
 		/*
 		 * -u : URL , --uport : target port
@@ -38,7 +51,7 @@ public class RawHttpPostSender_Main {
 		 * -d : --dpname : string , --dvalue : string
 		 * */
 		if(args.length == 0){
-			System.out.println("HttpRawSender");
+			printHowToUse();
 			return;
 		}
 
@@ -97,7 +110,7 @@ public class RawHttpPostSender_Main {
 					continue;
 				}else{
 					/* HEADER Value Error */
-					System.out.println("Check Header Value");
+					System.out.println("Check Header Value --hvalue");
 					return;
 				}
 			}
