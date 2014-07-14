@@ -26,7 +26,7 @@ import org.apache.http.message.BasicNameValuePair;
 
 public class RawHttpPostSender_Main {
 	public static void printHowToUse(){
-		System.out.println("How To Use");
+		System.out.println("==== How To Use ====");
 		System.out.println("-u : URL , --uport : URL Port");
 		System.out.println("-p : Proxy Address , --pport : Proxy Port");
 		System.out.println("-h : Http Header, --hvalue : Http Value");
