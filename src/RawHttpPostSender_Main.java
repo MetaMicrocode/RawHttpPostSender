@@ -29,7 +29,7 @@ import org.apache.http.message.BasicNameValuePair;
 public class RawHttpPostSender_Main {
 	public static void printHowToUse(){
 		System.out.println("==== How To Use ====");
-		System.out.println("-u : URL , --uport : URL Port");
+		System.out.println("-u : URL : http://xxx.xxx.xxx.xxx[:xxxx][/...]");
 		System.out.println("-p : Proxy Address , --pport : Proxy Port");
 		System.out.println("-h : Http Header, --hvalue : Http Value");
 		System.out.println("-t : [Choose One] form-data(default), param");
@@ -39,20 +39,9 @@ public class RawHttpPostSender_Main {
 		System.out.println("-rh --rhname <name> [--rhoutput <path>]");
 		System.out.println("-rc [--rcoutput <path>]");
 		System.out.println("Excample");
-		System.out.println("-u http://192.168.0.6/upload.php -h User-Agent --hvalue \"Mozilla/5.0 (Windows NT 6.1; WOW64; rv:30.0) Gecko/20100101 Firefox/30.0\" -d --dpname \"userfile\" --dfile \"C:/data/data1.txt\" --dnname \"test42342.txt\" --dmime \"text/plane\" -t form-data -p 192.168.0.10 --pport 8080 -status -output c:/data/res.txt");
+		System.out.println("-u http://192.168.0.2:8000/upload.php -h User-Agent --hvalue \"Mozilla/5.0 (Windows NT 6.1; WOW64; rv:30.0) Gecko/20100101 Firefox/30.0\" -d --dpname \"userfile\" --dfile \"C:/data/data1.txt\" --dnname \"test42342.txt\" --dmime \"text/plane\" -t form-data -p 192.168.0.10 --pport 8080 -status -output c:/data/res.txt");
 	}
 	public static void main(String[] args) throws ClientProtocolException, IOException {
-		/*
-		 * -u : URL , --uport : target port
-		 * -p : proxy_host, --pport : proxy port
-		 * -h : header, --hvalue : value
-		 * -output : return value to output file
-		 * -status : print status
-		 * -t : form-data[default], param
-		 *  Choose One ()
-		 * -d : --dfile : file name or --dvalue : string, --dmime : string , --dpname : string  , --dnname : string
-		 * -d : --dpname : string , --dvalue : string
-		 * */
 		if(args.length == 0){
 			printHowToUse();
 			return;
@@ -64,7 +53,6 @@ public class RawHttpPostSender_Main {
 
 		boolean isHost = false;
 		String hostAddr = "";
-		int hostPort = 80;
 
 		boolean isHeader = false;
 		ArrayList<Map<String, String>> headers = new ArrayList<Map<String, String>>();
@@ -102,10 +90,6 @@ public class RawHttpPostSender_Main {
 			if(args[i].equals("-u")){
 				isHost = true;
 				hostAddr = args[++i];
-				continue;
-			}
-			if(args[i].equals("--uport")){
-				hostPort = Integer.parseInt(args[++i]);
 				continue;
 			}
 
@@ -189,7 +173,7 @@ public class RawHttpPostSender_Main {
 			}
 		}
 
-		/* 모든 데이터를 다 읽었다면 실제 패킷을 만들어 보낸다.*/
+		/* 紐⑤뱺 �곗씠�곕� ���쎌뿀�ㅻ㈃ �ㅼ젣 �⑦궥��留뚮뱾��蹂대궦��*/
 		/* Set Proxy */
 		HttpHost proxy = null;
 		CloseableHttpClient httpclient = null;
