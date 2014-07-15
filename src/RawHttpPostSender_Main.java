@@ -46,7 +46,7 @@ public class RawHttpPostSender_Main {
 		System.out.println("== Excample ==");
 		System.out.println("-u http://192.168.0.2:8000/upload.php -h User-Agent --hvalue \"Mozilla/5.0 (Windows NT 6.1; WOW64; rv:30.0) Gecko/20100101 Firefox/30.0\" -d --dpname \"userfile\" --dfile \"C:/data/data1.txt\" --dnname \"test42342.txt\" --dmime \"text/plane\" -t form-data -p 192.168.0.10 --pport 8080 -status -output c:/data/res.txt");
 		System.out.println("== NOTE ==");
-		System.out.println("'-c' option (COOKIE) is replaced that '-h' option like -h \"Cookie\" --hvalue \"PHPSESSION=sdfasdf1231dsfa1231231231\"");
+		System.out.println("'-c' option (COOKIE) is replaced that '-h' option like -h \"Cookie\" --hvalue \"PHPSESSION=key\"");
 	}
 	public static void main(String[] args) throws ClientProtocolException, IOException {
 		if(args.length == 0){
