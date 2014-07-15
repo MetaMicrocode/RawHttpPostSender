@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.http.Consts;
 import org.apache.http.HttpHost;
 import org.apache.http.NameValuePair;
@@ -18,6 +19,7 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.Header;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -33,9 +35,9 @@ public class RawHttpPostSender_Main {
 		System.out.println("-t : [Choose One] form-data(default), param");
 		System.out.println("-d <DON'T USE PARAMETER> : --dfile : file name or --dvalue : string, --dmime : string , --dpname : string  , --dnname : string");
 		System.out.println("-d <DON'T USE PARAMETER> : --dpname : string , --dvalue : string");
-		System.out.println("-output : Output File Name");
-		System.out.println("-status : Print Response Status");
-		System.out.println("-r <DON'T USE PARAMETER> --rtype : <header | status | contents> [--rfilter <regex>] [--routput <File Name>]");
+		System.out.println("-rs [--rsoutput <path>]");
+		System.out.println("-rh --rhname <name> [--rhoutput <path>]");
+		System.out.println("-rc [--rcoutput <path>]");
 		System.out.println("Excample");
 		System.out.println("-u http://192.168.0.6/upload.php -h User-Agent --hvalue \"Mozilla/5.0 (Windows NT 6.1; WOW64; rv:30.0) Gecko/20100101 Firefox/30.0\" -d --dpname \"userfile\" --dfile \"C:/data/data1.txt\" --dnname \"test42342.txt\" --dmime \"text/plane\" -t form-data -p 192.168.0.10 --pport 8080 -status -output c:/data/res.txt");
 	}
@@ -76,6 +78,14 @@ public class RawHttpPostSender_Main {
 		String outputFilePath = "";
 
 		boolean isStatus = false;
+		
+		ArrayList<Map<String, String>> resultHeaders = new ArrayList<Map<String, String>>();
+		
+		boolean isUseOptionRS = false;
+		String outputResultStatusPath = "";
+		
+		boolean isUseOptionRC = false;
+		String outputResultContentsPath = "";
 
 		for(int i = 0 ; i < args.length ; ++i){
 			/* PROXY */
@@ -123,12 +133,11 @@ public class RawHttpPostSender_Main {
 			}
 
 			/* DATA */
-
 			if(args[i].equals("-d")){
 				Map<String, String> map = new HashMap<String, String>();
 				while(true){
 					try{
-						if(args[i+1].equals("--dfile") | 
+						if(i+2 < args.length && args[i+1].equals("--dfile") ||
 								args[i+1].equals("--dnname") || args[i+1].equals("--dpname") || 
 								args[i+1].equals("--dmime") || args[i+1].equals("--dvalue")){
 							map.put(args[i+1], args[i+2]);
@@ -144,22 +153,43 @@ public class RawHttpPostSender_Main {
 				datas.add(map);
 				continue;
 			}
-
-
-
-			/* OPTIONS */
-			if(args[i].equals("-output")){
-				isOutput = true;
-				outputFilePath = args[++i];
+			
+			/* RESULT */
+			if(args[i].equals("-rs")){
+				isUseOptionRS = true;
+				if(i+1 < args.length && args[i+1].equals("--rsoutput")){
+					outputResultStatusPath = args[++i];
+				}
 				continue;
 			}
-			if(args[i].equals("-status")){
-				isStatus = true;
+			if(args[i].equals("-rc")){
+				isUseOptionRC = true;
+				if(i+1 < args.length && args[i+1].equals("--rcoutput")){
+					outputResultContentsPath = args[++i];
+				}
+				continue;
+			}
+			if(args[i].equals("-rh")){
+				Map<String, String> map = new HashMap<String, String>();
+				while(true){
+					try{
+						if(i+2 < args.length && args[i+1].equals("--rhname") || args[i+1].equals("--rhoutput")){
+							if(args[i+1].equals("--rhname"))	map.put("--rhname", args[i+2]);
+							if(args[i+1].equals("--rhoutput"))	map.put("--rhoutput", args[i+2]);
+							i += 2;
+						}else{
+							break;
+						}
+					}catch(ArrayIndexOutOfBoundsException ex){
+						break;
+					}
+
+				}
+				resultHeaders.add(map);
 			}
 		}
 
 		/* 모든 데이터를 다 읽었다면 실제 패킷을 만들어 보낸다.*/
-
 		/* Set Proxy */
 		HttpHost proxy = null;
 		CloseableHttpClient httpclient = null;
@@ -232,28 +262,48 @@ public class RawHttpPostSender_Main {
 		/* Return Result */
 		CloseableHttpResponse res = httpclient.execute(httppost);
 
-		/* Output Console */
-		if(isStatus) System.out.println(res.getStatusLine().toString());
-		InputStream stream = res.getEntity().getContent();
-		byte[] bytes = new byte[512];
-		stream.read(bytes);
-		System.out.println(new String(bytes));
-
-		/* Output File */
-		if(isOutput){
-			try {
-				////////////////////////////////////////////////////////////////
-				BufferedWriter out = new BufferedWriter(new FileWriter(outputFilePath));
-				out.write(res.getStatusLine().toString());
-				out.newLine();
-				out.write(new String(bytes));
-				out.close();
-				////////////////////////////////////////////////////////////////
-			} catch (IOException e) {
-				System.err.println(e); // 에러가 있다면 메시지 출력
-				System.exit(1);
+		/* Output Result Status */
+		if(isUseOptionRS) System.out.println(res.getStatusLine().toString());
+		if(!outputResultStatusPath.equals("")){
+			BufferedWriter out = new BufferedWriter(new FileWriter(outputResultStatusPath));
+			out.write(res.getStatusLine().toString());
+			out.close();
+		}
+		
+		/* Output Result Header */
+		for(Map<String, String> map : resultHeaders){
+			String rhname = map.get("--rhname");
+			String rhoutput = map.get("--rhoutput");
+			if(rhname != null){
+				org.apache.http.Header[] hs = res.getHeaders(rhname);
+				for(org.apache.http.Header header : hs){
+					System.out.println(header.toString());
+				}
+				if(rhoutput != null){
+					BufferedWriter out = new BufferedWriter(new FileWriter(rhoutput));
+					for(org.apache.http.Header header : hs){
+						out.write(header.toString());
+						out.newLine();
+					}
+					out.close();
+				}
+			}else{
+				/* ERROR */
+				System.out.println("Check Header Name '--rhname'");
+				return;
 			}
 		}
+		
+		/* Output Result Contents */
+		if(isUseOptionRC){
+			System.out.println(new String(IOUtils.toByteArray(res.getEntity().getContent())));
+		}
+		if(!outputResultContentsPath.equals("")){
+			BufferedWriter out = new BufferedWriter(new FileWriter(outputResultContentsPath));
+			out.write(new String(IOUtils.toByteArray(res.getEntity().getContent())));
+			out.close();
+		}
+		
 		/* Close */
 		res.close();
 		httpclient.close();

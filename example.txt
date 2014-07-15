@@ -1,0 +1,3 @@
+-u http://192.168.0.15/upload_ok.php -h Hello --hvalue "Wrodsaf sdfasdfa sdf asdfa" -d --dfile "C:\data\data1.txt" --dpname "file" --dnname "test.txt" --dmime "text/plane" -t form-data -p 192.168.0.10 --pport 8080 -status -output c:/data/res.txt
+
+-u http://192.168.0.15/upload_ok.php -h Hello --hvalue "Wrodsaf sdfasdfa sdf asdfa" -d --dpname "file" --dvalue "data/data/data/" --dnname "test.txt" --dmime "text/plane" -d --dpname "data" --dvalue "Hello Worlasd cxv asdfsdfasf dadsfa dfasdf\" \" \" " -t param -p 192.168.0.10 --pport 8080 -status -output c:/data/res.txt

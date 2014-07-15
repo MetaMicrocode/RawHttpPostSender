@@ -9,5 +9,10 @@
 	<classpathentry kind="lib" path="C:/Users/P052524/Desktop/workspace/httpcomponents-client-4.3.4/lib/httpclient-cache-4.3.4.jar"/>
 	<classpathentry kind="lib" path="C:/Users/P052524/Desktop/workspace/httpcomponents-client-4.3.4/lib/httpcore-4.3.2.jar"/>
 	<classpathentry kind="lib" path="C:/Users/P052524/Desktop/workspace/httpcomponents-client-4.3.4/lib/httpmime-4.3.4.jar"/>
+	<classpathentry kind="lib" path="P:/RawHttpPostSender/lib/commons-io-2.4/commons-io-2.4.jar"/>
+	<classpathentry kind="lib" path="P:/RawHttpPostSender/lib/commons-io-2.4/commons-io-2.4-javadoc.jar"/>
+	<classpathentry kind="lib" path="P:/RawHttpPostSender/lib/commons-io-2.4/commons-io-2.4-sources.jar"/>
+	<classpathentry kind="lib" path="P:/RawHttpPostSender/lib/commons-io-2.4/commons-io-2.4-tests.jar"/>
+	<classpathentry kind="lib" path="P:/RawHttpPostSender/lib/commons-io-2.4/commons-io-2.4-test-sources.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
