@@ -2,7 +2,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Consts;
 import org.apache.http.HttpHost;
@@ -20,11 +22,9 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
-import org.apache.http.entity.mime.Header;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 import org.apache.http.impl.cookie.BasicClientCookie;
@@ -36,10 +36,10 @@ public class RawHttpPostSender_Main {
 		System.out.println("-u : URL : http://xxx.xxx.xxx.xxx[:xxxx][/...]");
 		System.out.println("-p : Proxy Address , --pport : Proxy Port [default : 8080]");
 		System.out.println("-h : Http Header --hvalue : Http Value");
-		System.out.println("-c : Cookie Name --cvalue : Cookie Value --cdomain : Cookie Domain [default: xxx.xxx.xxx.xxx] --cpath : Cookie Path [default: /");
+		System.out.println("-c : Cookie Name --cvalue : Cookie Value --cdomain : Cookie Domain [default: xxx.xxx.xxx.xxx] --cpath : Cookie Path [default: /]");
 		System.out.println("-t : [Choose One] form-data(default), param");
-		System.out.println("-d <DON'T USE PARAMETER> : --dfile : file name or --dvalue : string, --dmime : string , --dpname : string  , --dnname : string [use '--dmime' option]");
-		System.out.println("-d <DON'T USE PARAMETER> : --dpname : string , --dvalue : string");
+		System.out.println("-d <DON'T USE PARAMETER> : --dpname : string <--dfile : File Name | --dvalue : string | --durl : URL>, [--dmime : string] [--dnname : string]");
+		System.out.println("-d <DON'T USE PARAMETER> : --dpname : string --dvalue : string");
 		System.out.println("-rs [--rsoutput <path>]");
 		System.out.println("-rh --rhname <name> [--rhoutput <path>]");
 		System.out.println("-rc [--rcoutput <path>]");
@@ -130,7 +130,7 @@ public class RawHttpPostSender_Main {
 				Map<String, String> map = new HashMap<String, String>();
 				while(true){
 					try{
-						if(i+2 < args.length && args[i+1].equals("--dfile") ||
+						if(i+2 < args.length && args[i+1].equals("--dfile") || i+2 < args.length && args[i+1].equals("--durl") ||
 								i+2 < args.length && args[i+1].equals("--dnname") || i+2 < args.length && args[i+1].equals("--dpname") || 
 								i+2 < args.length && args[i+1].equals("--dmime") || i+2 < args.length && args[i+1].equals("--dvalue")){
 							map.put(args[i+1], args[i+2]);
@@ -254,19 +254,32 @@ public class RawHttpPostSender_Main {
 				String dnname = data.get("--dnname");
 				String dmime = data.get("--dmime");
 				String dvalue = data.get("--dvalue");
-
+				String durl = data.get("--durl");
+				
 				if(dpname == null){
 					/* ERROR */
 					System.out.println("--dpname is null");
 					return;
 				}
-				if(dfile != null){
+				
+				if(durl != null){
+					URL url = new URL(durl);
+					if(dmime != null && dnname != null){
+						builder.addBinaryBody(dpname,url.openStream(),ContentType.create(dmime), dnname);
+					}if(dmime == null && dnname != null){
+						builder.addBinaryBody(dpname,url.openStream(),ContentType.APPLICATION_OCTET_STREAM, dnname);
+					}else{
+						/* DO NOT CODE : builder.addBinaryBody(dpname,url.openStream()) : This is not exist File Name and To go Error */
+						builder.addBinaryBody(dpname,url.openStream(),ContentType.APPLICATION_OCTET_STREAM, FilenameUtils.getName(durl));
+					}
+				}else if(dfile != null){
 					if(dmime != null && dnname != null){
 						builder.addBinaryBody(dpname, new File(dfile), ContentType.create(dmime), dnname);
+					}else if(dmime == null && dnname != null){
+						builder.addBinaryBody(dpname, new File(dfile), ContentType.APPLICATION_OCTET_STREAM, dnname);
 					}else{
 						builder.addBinaryBody(dpname, new File(dfile));
 					}
-
 				}else if(dvalue != null){
 					if(dmime != null){
 						builder.addTextBody(dpname, dvalue, ContentType.create(dmime));
