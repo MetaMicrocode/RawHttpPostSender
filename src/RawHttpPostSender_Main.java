@@ -42,17 +42,6 @@ public class RawHttpPostSender_Main {
 		System.out.println("-u http://192.168.0.6/upload.php -h User-Agent --hvalue \"Mozilla/5.0 (Windows NT 6.1; WOW64; rv:30.0) Gecko/20100101 Firefox/30.0\" -d --dpname \"userfile\" --dfile \"C:/data/data1.txt\" --dnname \"test42342.txt\" --dmime \"text/plane\" -t form-data -p 192.168.0.10 --pport 8080 -status -output c:/data/res.txt");
 	}
 	public static void main(String[] args) throws ClientProtocolException, IOException {
-		/*
-		 * -u : URL , --uport : target port
-		 * -p : proxy_host, --pport : proxy port
-		 * -h : header, --hvalue : value
-		 * -output : return value to output file
-		 * -status : print status
-		 * -t : form-data[default], param
-		 *  Choose One ()
-		 * -d : --dfile : file name or --dvalue : string, --dmime : string , --dpname : string  , --dnname : string
-		 * -d : --dpname : string , --dvalue : string
-		 * */
 		if(args.length == 0){
 			printHowToUse();
 			return;
