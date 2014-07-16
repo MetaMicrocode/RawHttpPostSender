@@ -38,7 +38,7 @@ public class RawHttpPostSender_Main {
 		System.out.println("-h : Http Header --hvalue : Http Value");
 		System.out.println("-c : Cookie Name --cvalue : Cookie Value --cdomain : Cookie Domain [default: xxx.xxx.xxx.xxx] --cpath : Cookie Path [default: /");
 		System.out.println("-t : [Choose One] form-data(default), param");
-		System.out.println("-d <DON'T USE PARAMETER> : --dfile : file name or --dvalue : string, --dmime : string , --dpname : string  , --dnname : string");
+		System.out.println("-d <DON'T USE PARAMETER> : --dfile : file name or --dvalue : string, --dmime : string , --dpname : string  , --dnname : string [use '--dmime' option]");
 		System.out.println("-d <DON'T USE PARAMETER> : --dpname : string , --dvalue : string");
 		System.out.println("-rs [--rsoutput <path>]");
 		System.out.println("-rh --rhname <name> [--rhoutput <path>]");
