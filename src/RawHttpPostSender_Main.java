@@ -3,6 +3,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -21,25 +22,31 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.Header;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
+import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicNameValuePair;
 
 public class RawHttpPostSender_Main {
 	public static void printHowToUse(){
 		System.out.println("==== How To Use ====");
-		System.out.println("-u : URL , --uport : URL Port");
-		System.out.println("-p : Proxy Address , --pport : Proxy Port");
-		System.out.println("-h : Http Header, --hvalue : Http Value");
+		System.out.println("-u : URL : http://xxx.xxx.xxx.xxx[:xxxx][/...]");
+		System.out.println("-p : Proxy Address , --pport : Proxy Port [default : 8080]");
+		System.out.println("-h : Http Header --hvalue : Http Value");
+		System.out.println("-c : Cookie Name --cvalue : Cookie Value --cdomain : Cookie Domain [default: xxx.xxx.xxx.xxx] --cpath : Cookie Path [default: /");
 		System.out.println("-t : [Choose One] form-data(default), param");
 		System.out.println("-d <DON'T USE PARAMETER> : --dfile : file name or --dvalue : string, --dmime : string , --dpname : string  , --dnname : string");
 		System.out.println("-d <DON'T USE PARAMETER> : --dpname : string , --dvalue : string");
 		System.out.println("-rs [--rsoutput <path>]");
 		System.out.println("-rh --rhname <name> [--rhoutput <path>]");
 		System.out.println("-rc [--rcoutput <path>]");
-		System.out.println("Excample");
-		System.out.println("-u http://192.168.0.6/upload.php -h User-Agent --hvalue \"Mozilla/5.0 (Windows NT 6.1; WOW64; rv:30.0) Gecko/20100101 Firefox/30.0\" -d --dpname \"userfile\" --dfile \"C:/data/data1.txt\" --dnname \"test42342.txt\" --dmime \"text/plane\" -t form-data -p 192.168.0.10 --pport 8080 -status -output c:/data/res.txt");
+		System.out.println("== Excample ==");
+		System.out.println("-u http://192.168.0.2:8000/upload.php -h User-Agent --hvalue \"Mozilla/5.0 (Windows NT 6.1; WOW64; rv:30.0) Gecko/20100101 Firefox/30.0\" -d --dpname \"userfile\" --dfile \"C:/data/data1.txt\" --dnname \"test42342.txt\" --dmime \"text/plane\" -t form-data -p 192.168.0.10 --pport 8080 -status -output c:/data/res.txt");
+		System.out.println("== NOTE ==");
+		System.out.println("'-c' option (COOKIE) is replaced that '-h' option like -h \"Cookie\" --hvalue \"PHPSESSION=key\"");
 	}
 	public static void main(String[] args) throws ClientProtocolException, IOException {
 		if(args.length == 0){
@@ -53,7 +60,6 @@ public class RawHttpPostSender_Main {
 
 		boolean isHost = false;
 		String hostAddr = "";
-		int hostPort = 80;
 
 		boolean isHeader = false;
 		ArrayList<Map<String, String>> headers = new ArrayList<Map<String, String>>();
@@ -69,6 +75,8 @@ public class RawHttpPostSender_Main {
 		boolean isStatus = false;
 		
 		ArrayList<Map<String, String>> resultHeaders = new ArrayList<Map<String, String>>();
+		
+		BasicCookieStore cookieStore = new BasicCookieStore();
 		
 		boolean isUseOptionRS = false;
 		String outputResultStatusPath = "";
@@ -93,10 +101,6 @@ public class RawHttpPostSender_Main {
 				hostAddr = args[++i];
 				continue;
 			}
-			if(args[i].equals("--uport")){
-				hostPort = Integer.parseInt(args[++i]);
-				continue;
-			}
 
 			/* HEADER */
 			if(args[i].equals("-h")){
@@ -114,7 +118,7 @@ public class RawHttpPostSender_Main {
 					return;
 				}
 			}
-
+			
 			/* SEND TYPE */
 			if(args[i].equals("-t")){
 				sendType = args[++i];
@@ -127,8 +131,8 @@ public class RawHttpPostSender_Main {
 				while(true){
 					try{
 						if(i+2 < args.length && args[i+1].equals("--dfile") ||
-								args[i+1].equals("--dnname") || args[i+1].equals("--dpname") || 
-								args[i+1].equals("--dmime") || args[i+1].equals("--dvalue")){
+								i+2 < args.length && args[i+1].equals("--dnname") || i+2 < args.length && args[i+1].equals("--dpname") || 
+								i+2 < args.length && args[i+1].equals("--dmime") || i+2 < args.length && args[i+1].equals("--dvalue")){
 							map.put(args[i+1], args[i+2]);
 							i += 2;
 						}else{
@@ -162,7 +166,7 @@ public class RawHttpPostSender_Main {
 				Map<String, String> map = new HashMap<String, String>();
 				while(true){
 					try{
-						if(i+2 < args.length && args[i+1].equals("--rhname") || args[i+1].equals("--rhoutput")){
+						if(i+2 < args.length && args[i+1].equals("--rhname") || i+2 < args.length && i+2 < args.length && args[i+1].equals("--rhoutput")){
 							if(args[i+1].equals("--rhname"))	map.put("--rhname", args[i+2]);
 							if(args[i+1].equals("--rhoutput"))	map.put("--rhoutput", args[i+2]);
 							i += 2;
@@ -177,8 +181,43 @@ public class RawHttpPostSender_Main {
 				resultHeaders.add(map);
 			}
 		}
+		
+		/* Because the URL : It is must be read  */
+		for(int i = 0 ; i < args.length ; ++i){
+			/* COOKIE */
+			if(args[i].equals("-c")){
+				String name = args[++i];
+				String data = "";
+				String domain = new URL(hostAddr).getHost();
+				String path = "/";
+				while(true){
+					if(i+2 < args.length && args[i+1].equals("--cvalue") || i+2 < args.length && args[i+1].equals("--cdomain") || i+2 < args.length && args[i+1].equals("--cpath")){
+						if(args[i+1].equals("--cvalue")){
+							data = args[i+2];
+						}
+						if(args[i+1].equals("--cdomain")){
+							domain = args[i+2];
+						}
+						if(args[i+1].equals("--cpath")){
+							path = args[i+2];
+						}
+						i+=2;
+					}else{
+						break;
+					}
+				}
+				if(data.equals("")){
+					/* ERROR */
+					System.out.println("Check Cookie Value : --cvalue");
+					return;
+				}
+				BasicClientCookie cookie = new BasicClientCookie(name,data);
+				cookie.setDomain(domain);
+				cookie.setPath(path);
+				cookieStore.addCookie(cookie);
+			}
+		}
 
-		/* 모든 데이터를 다 읽었다면 실제 패킷을 만들어 보낸다.*/
 		/* Set Proxy */
 		HttpHost proxy = null;
 		CloseableHttpClient httpclient = null;
@@ -187,6 +226,7 @@ public class RawHttpPostSender_Main {
 			DefaultProxyRoutePlanner routePlanner = new DefaultProxyRoutePlanner(proxy);
 			httpclient = HttpClients.custom()
 					.setRoutePlanner(routePlanner)			// Set the proxy
+					.setDefaultCookieStore(cookieStore)
 					.build();
 		}else{
 			httpclient = HttpClients.custom().build();
@@ -246,7 +286,6 @@ public class RawHttpPostSender_Main {
 			UrlEncodedFormEntity entity = new UrlEncodedFormEntity(formParams, Consts.UTF_8);
 			httppost.setEntity(entity);
 		}
-
 
 		/* Return Result */
 		CloseableHttpResponse res = httpclient.execute(httppost);
